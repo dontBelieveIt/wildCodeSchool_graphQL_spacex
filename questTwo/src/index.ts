@@ -1,7 +1,7 @@
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import "reflect-metadata"; 
-import {Arg, Field, InputType, Mutation, ObjectType, Query, Resolver} from 'type-graphql'
+import {Arg, buildSchema, Field, InputType, Mutation, ObjectType, Query, Resolver} from 'type-graphql'
 
 // A schema is a collection of type definitions (hence "typeDefs")
 // that together define the "shape" of queries that are executed against
@@ -29,11 +29,24 @@ const books :Book[] = [
   },
 ];
 
+@InputType()
+class BookInput {
+  @Field()
+  title: string;
 
+  @Field()
+  author:string;
+}
 // Resolvers define how to fetch the types defined in your schema.
 // This resolver retrieves books from the "books" array above.
 @Resolver(Book)
 class BookResolver  {
+
+  @Query(() => [Book])
+  books() {
+    return books; 
+  }
+
   @Query(() => Book)
   getBookById(@Arg("id") id: string) {
     return books.find((book) => book.id == id);
@@ -52,20 +65,13 @@ class BookResolver  {
   };
 }
   
-  @InputType()
-  class BookInput {
-    @Field()
-    title: string;
-
-    @Field()
-    author:string;
-  }
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
+const schema = await buildSchema({
+  resolvers: [BookResolver],
 });
+
+const server = new ApolloServer({ schema });
 
 // Passing an ApolloServer instance to the `startStandaloneServer` function:
 //  1. creates an Express app

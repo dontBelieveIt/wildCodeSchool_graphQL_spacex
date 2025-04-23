@@ -1,0 +1,6 @@
+query ExampleQuery($bookId: String!) {
+  getBookById(id: $bookId) {
+    author
+    title
+  }
+}
